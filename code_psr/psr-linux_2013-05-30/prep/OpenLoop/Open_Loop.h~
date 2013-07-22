@@ -1,0 +1,33 @@
+/*
+ * Open_Loop.h
+ *
+ *  Created on: Oct 1, 2010
+ *      Author: ulvi
+ */
+
+#ifndef OPEN_LOOP_H_
+#define OPEN_LOOP_H_
+
+#include "Includes.h"
+
+class Open_Loop
+{
+private:
+
+	uint32 *myLocalBuffer;
+	byte *myMasterDataPtr;
+	byte *FileHeader;
+	Msec_Header_S *myMsecHeaderPtr;
+	uint16 *msecheader;
+	DATA_CPX *buffer;
+
+
+public:
+	Open_Loop();
+	~Open_Loop();
+	void Start();
+	void Stop();
+	void bit_unpack(DATA_CPX *unpacked, uint32 *packed, int32 cnt);
+};
+
+#endif /* OPEN_LOOP_H_ */

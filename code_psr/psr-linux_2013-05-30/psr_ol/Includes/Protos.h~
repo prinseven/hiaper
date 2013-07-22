@@ -1,0 +1,64 @@
+#ifndef PROTOS_H
+#define PROTOS_H
+
+/* Init Protos */
+/********************************************************************************/
+void Thread_Init(void);
+int Pipes_Init();
+void Object_Init(void);
+void L1_PRNGen();	//generate PRN codes
+/********************************************************************************/
+
+
+/* Shutdown Protos */
+/********************************************************************************/
+void Thread_Shutdown();
+int Pipes_Read_Shutdown();
+int Pipes_Write_Shutdown();
+void Object_Shutdown();
+/********************************************************************************/
+
+/* Navigator Protos */
+/********************************************************************************/
+int sbit(unsigned long val, int nbits); //put the sign bit into the top bit
+int find_mode(int *array, int size);
+/********************************************************************************/
+
+/*Matrix Sheit */
+/********************************************************************************/
+int Invert(double**, double **, int dimension);
+double **Mult(double** A, int A_rows, int A_cols,double** B, int B_rows, int B_cols);
+double **Transpose(double**, int rows, int cols);
+/********************************************************************************/
+
+/* Important control Globals */
+/********************************************************************************/
+bool getRUN();
+void setRUN(bool);
+/********************************************************************************/
+/* Found in x86.cpp */
+/*----------------------------------------------------------------------------------------------*/
+void  x86_add(int16 *A, int16 *B, int32 cnt);	//!< Pointwise vector addition
+void  x86_sub(int16 *A, int16 *B, int32 cnt);	//!< Pointwise vector difference
+void  x86_mul(int16 *A, int16 *B, int32 cnt);	//!< Pointwise vector multiply
+void  x86_muls(int16 *A, int16 *B, int32 cnt, int32 shift);	//!< Pointwise vector multiply
+int32 x86_dot(int16 *A, int16 *B, int32 cnt);	//!< Compute vector dot product
+void  x86_crot(CPX *_A, CPX *_B, int32 _cnt);  //rotate
+void  x86_conj(DATA_CPX *A, int32 cnt);											//!< Pointwise vector conjugate
+void  x86_cacc(DATA_CPX *A, cpx_sine *B, int32 cnt, int32 *iaccum, int32 *qaccum);	//!< Compute dot product of cpx and a mix vector
+void  x86_cmul(DATA_CPX *A, DATA_CPX *B, int32 cnt);									//!< Pointwise vector multiply
+void  x86_cmuls(DATA_CPX *A, DATA_CPX *B, int32 cnt, int32 shift);					//!< Pointwise complex multiply with shift
+void  x86_cmulsc(DATA_CPX *A, DATA_CPX *B, DATA_CPX *C, int32 cnt, int32 shift);			//!< Pointwise vector multiply with shift, dump results into C
+void  x86_cmag(DATA_CPX *A, int32 cnt);											//!< Convert from complex to a power
+void  x86_prn_accum(DATA_CPX *A, DATA_CPX *E, DATA_CPX *P, DATA_CPX *L, int32 cnt, DATA_CPX *accum);  //!< This is a long story
+void  x86_prn_accum_new(DATA_CPX *A, cpx_sine *E, cpx_sine *P, cpx_sine *L, int32 cnt, CPX_ACCUM *accum);  //!< This is a long story
+void  x86_max(int32 *_A, int32 *_index, int32 *_magt, int32 _cnt);
+void x86_cmuln(DATA_TYPE *_A, DATA_CPX *_B, DATA_CORR *_C, int32 _cnt);
+void x86_cmuln2(DATA_TYPE *_A, DATA_CPX *_B, DATA_CORR *_C, int32 _cnt);
+int64 x86_cacc(CPX *_A, int64 *_B, int32 _cnt);
+void x86_cmulc(CPX *_A, CPX *_B, CPX *_C, int32 _cnt);
+CPX_ACCUM x86_cacc(DATA_CORR *_A, DATA_TYPE *_B, int32 _cnt);
+CPX_ACCUM x86_cacc2(DATA_CORR *_A, cpx_sine *_B, int32 _cnt);
+/*----------------------------------------------------------------------------------------------*/
+
+#endif // PROTOS_H

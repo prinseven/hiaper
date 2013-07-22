@@ -1,0 +1,50 @@
+%
+%  definitions.tex
+%
+
+%\usepackage{showkeys}
+
+%\usepackage{mathptmx}
+\usepackage{amsmath}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{subfigure}
+\usepackage{graphicx}
+\usepackage{abbrevs}
+\usepackage{lips}
+\usepackage{gensymb}
+\usepackage{type1cm}
+\usepackage{type1ec}
+%\usepackage{natbib}
+
+
+
+% Fancy verbatim package and listings - they work together well to include code
+\usepackage{fancyvrb}
+\fvset{fontsize=\scriptsize,resetmargins=true,tabsize=4,baselinestretch=1,numbers=left,stepnumber=5}
+\usepackage{listings}
+\lstset{showstringspaces=true,breaklines=true,tabsize=4,prebreak=\mbox{$\swarrow$},breakautoindent=false,fancyvrb=true}
+
+% Pretty numbers
+\usepackage[np,autolanguage]{numprint}
+\makeatletter
+\renewcommand*\nprt@dotlist{.}
+\renewcommand*\nprt@ignorelist{,}
+\g@addto@macro\npstyleenglish{%
+ \npthousandsep{\,}%
+}%
+\makeatother
+
+% URLs
+\usepackage{url}
+
+% For the array package, define new column types and some shortcuts
+\usepackage{array}
+\newcommand{\PreserveBackslash}[1]{\let\temp=\\#1\let\\=\temp}
+\let\PBS=\PreserveBackslash
+\newcolumntype{C}{>{$}c<{$}}
+\newcolumntype{R}{>{$}r<{$}}
+\newcolumntype{L}{>{$}l<{$}}
+
+\usepackage{microtype}
+

@@ -1,0 +1,286 @@
+
+
+#include "Open_Loop.h"
+
+Open_Loop::Open_Loop()
+{
+
+
+	clock_t time_0, time_1;
+	int lcv, tick2, lcv2, lcv3, lcv4, lcv5, tick;
+	double min,minn;
+
+	char filename[1024];
+	FILE *fp;
+	
+	std::string fileName;
+	std::cout << "\nEnter file name:  \n";
+    std::cout << "Example = /media/Files/grs-data/2008.053_RF05_F01_A0_L1  \n";
+	getline (std::cin, fileName);
+
+	// Malloc a section of memory for holding the recorded data.
+	master_data = (DATA_CPX *)malloc(D_SAMPLES_PER_MS*ACQ_TICKS*sizeof(DATA_CPX));
+	myLocalBuffer= (uint32 *)malloc(D_SAMPLES_PER_MS*ACQ_TICKS*sizeof(uint32));
+	FileHeader = (byte *)malloc(512);
+	myMsecHeaderPtr = (Msec_Header_S *)malloc(sizeof(Msec_Header_S));
+	msecheader = (uint16 *)malloc(sizeof(uint16)*64);
+	buffer = (DATA_CPX *)malloc(D_SAMPLES_PER_MS*sizeof(DATA_CPX));
+
+	// Open our input file and error check the opening.
+
+	int NumMsecPerFile;
+	int FileNumber;
+	int FileQtt;
+	std::cout << "\nEnter file length in milliseconds:  ";
+	std::cin >> NumMsecPerFile;
+
+	std::cout << "\nEnter the first file number you want to start (0 is the first file number):  ";
+	std::cin >> FileNumber;
+
+	std::cout <<"\nEnter last file number:  ";
+	std::cin >> FileQtt;
+
+	if(FileNumber > FileQtt)
+	{
+		printf("\nFirst file number cannot be greater than the last file number\n");
+				return;
+	}
+
+	// Create an array of bools which tell us what SVs have had OL channels kicked for them.
+	bool OL_spawned[L1_NUM_SVS] = {false};
+
+	// Define a set of variables needed to spawn a new OL channel.
+	OL_Frame_Start_S tempFrameInfo;
+
+	tick2=0;
+	for(lcv4=FileNumber; lcv4 <= FileQtt; lcv4++)
+	{
+
+		int msec_num = lcv4*NumMsecPerFile;
+
+		sprintf(filename,"%s_%d_%d.grs",fileName.c_str(), msec_num, NumMsecPerFile);
+
+		// open a file start with the first one
+		
+		printf("File %d: %s\n",lcv4,filename);
+		fp=fopen(filename,"rb");
+		if (!fp)
+					{
+						printf("\nUnable to open file! \n");
+						return;
+					}
+		//read file header 512 bytes
+		fread(&FileHeader[0],sizeof(byte),512,fp);
+
+		//read ACQ_TICKS ms data
+
+		for(lcv5=0; lcv5 < ACQ_TICKS; lcv5++)
+		{
+			fread(&msecheader[0],sizeof(uint16),64,fp);
+			fread(&myLocalBuffer[lcv5*D_SAMPLES_PER_MS/16],sizeof(uint32),D_SAMPLES_PER_MS/16,fp);
+
+		}
+		bit_unpack(&master_data[0],&myLocalBuffer[0],ACQ_TICKS*D_SAMPLES_PER_MS);
+
+		if(tick2 == 0 )
+		{
+			// Acquisition - cold acquire satellites using the current acquisition routine.
+			time_0 = clock();
+			pAcquisition->Cold_Acquire(master_data, &Acq_results[0]);
+			time_1 = clock();
+			printf("Direct acquisition took %.2f seconds!\n",  (double)(time_1 - time_0) /CLOCKS_PER_SEC);
+
+
+			//Declare Detection
+			//----------------------------------------------------------------------------
+			// Find the mean of the SNRs found during acquisition.
+			min = 0.0;
+			for(lcv = 0; lcv < NUM_CODES; lcv++) {
+				Acq_results[lcv].detected = false;
+				min += Acq_results[lcv].SNR / L1_NUM_CODES;
+			}
+			//-----------------------------------------------------------------------------
+			//New detection alg.
+			minn = (double)Acq_results[0].CorrMax;
+			for(lcv = 0; lcv < NUM_CODES; lcv++){
+
+				if(Acq_results[lcv].CorrMax < minn){
+					minn = (double)Acq_results[lcv].CorrMax;
+				}
+
+			}
+			for(lcv = 0; lcv < NUM_CODES; lcv++){
+				Acq_results[lcv].NewSNR = (Acq_results[lcv].CorrMax-minn)/minn;
+				std::cout << "SV " <<Acq_results[lcv].SV+1<<", SNR = "<< Acq_results[lcv].NewSNR <<"\n";
+			}
+			//-----------------------------------------------------------------------------
+			// For all satellites...
+			tick = 0;
+			for(lcv = 0; lcv < NUM_CODES; lcv++) {
+				// Check to see if the satellite is there, i.e. the SNR is at least 0.5 dB above the mean.
+				if(Acq_results[lcv].NewSNR > 0.5) {
+					// Let us know that we have detected this satellite.
+					Acq_results[lcv].detected = true;
+
+					// Clear out the current channel and start tracking this one (closed-loop).
+					pChannels[tick]->doClearChannel();
+					pChannels[tick]->doStartChannel(Acq_results[lcv].SV,
+													Acq_results[lcv].code_phase,
+													Acq_results[lcv].doppler);
+
+					// Update tick (the current channel number).
+					tick++;
+
+					// If the current "tick" is at or above MAX_CHANNELS, then we can track no more satellites
+					// and can stop trying.
+					if( tick >= MAX_CHANNELS )
+						break;
+				}
+			}
+
+			//-----------------------------------------------------------------------------
+
+			FILE* sv_chan_file = fopen("..//Output//sv_chans.dat","w");
+			for (lcv = 0; lcv < MAX_CHANNELS; lcv++) {
+				if (pChannels[lcv]->Active())
+					fprintf(sv_chan_file,"%d,%d\n",lcv,pChannels[lcv]->SV()+1);
+			}
+			fclose(sv_chan_file);
+
+
+			// Start the timer (to see how long it takes to chew through the data)
+			time_0 = clock();
+
+
+			tick = 0;
+		}
+		tick2++;
+
+		//----------------------------------------------------------------------------
+			// Reset our read position to the beginning of the data file (after having done the
+			// acquisition).  Sets to the start of the 0th millisecond.
+			rewind(fp);
+			//read the file header. set to first ms
+			fread(FileHeader,sizeof(byte),512,fp);
+			//---------------------------------------------------------------------------
+			//-----------------------------------------------------------------------------
+			// Process either the entire file.
+			for(lcv2=0; lcv2 < NumMsecPerFile; lcv2++)
+			{
+				//**********
+				//read 1 ms data!!!
+				//**********
+				//read msec header of the data
+				fread(&myMsecHeaderPtr[0],sizeof(byte),sizeof(Msec_Header_S),fp);
+				//memcpy(MsecHeader,&myMsecHeaderPtr[0],sizeof(myMsecHeaderPtr));
+				MsecHeader=*myMsecHeaderPtr;
+				//read 1 ms data
+				fread(&myLocalBuffer[0],sizeof(DATA_CPX),D_SAMPLES_PER_MS/16,fp);
+				//unpacked data (0->1,1->-1)
+				bit_unpack(&master_data[0],&myLocalBuffer[0],D_SAMPLES_PER_MS);
+
+				// HACK - UTC adjust on APL data
+				// MsecHeader.GPS_MSOW += 14000;  removed 2006.10.24 tdl cause of many a problems for NON-APL data
+
+				// Correlate on all of the active channels.
+				for(lcv = 0; lcv < MAX_CHANNELS; lcv++)
+
+					if(pChannels[lcv]->Active())
+					{
+						pChannels[lcv]->doTrack();
+					}
+
+
+				// Correlate on all of the active OL channels.  For the inactive ones, check to see if
+				// there are new satellites available.
+				for(lcv = 0; lcv < MAX_OL_CHANNELS; lcv++) {
+					if(pOLChannels[lcv]->Active()) {
+						// OL channel is active, so track on it.
+						pOLChannels[lcv]->doTrack();
+					} else {
+						// OL channel is inactive, so over all closed-loop channels...
+						for (lcv3 = 0; lcv3 < MAX_CHANNELS; lcv3++) {
+							// which are active...
+							if (pChannels[lcv3]->Active()) {
+								// are a satellite and not WAAS...
+								if (pChannels[lcv3]->SV() < L1_NUM_SVS) {
+									// and haven't yet spawned off an OL channel...
+									if (OL_spawned[pChannels[lcv3]->SV()] == false) {
+										// and also say that there is a bit edge in this data set...
+										if (pChannels[lcv3]->FrameEdgePresent(tempFrameInfo)) {
+											// then we start the OL channel with the appropriate values.
+											pOLChannels[lcv]->doClearChannel();
+											pOLChannels[lcv]->doStartChannel(tempFrameInfo);
+											// Set to spawned regardless of if it worked to avoid repeating errors.
+											OL_spawned[tempFrameInfo.SV] = true;
+											// Only track if the initialization worked!
+											// Otherwise, mark this channel as still inactive.
+											if (pOLChannels[lcv]->Active()) {
+												pOLChannels[lcv]->doTrack();
+												// Optional - kill the CL channel to save time
+												// pChannels[lcv3]->Kill();
+												break;  // Spawned one OL channel, don't keep spawning in it!
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+
+			}
+
+			fclose(fp);
+
+	}
+	/*-----------------------------------------------------------------------------*/
+
+	// Get ending time for this run and print the data.
+	time_1 = clock();
+	printf("Tracking took %.2f seconds to process %.2f seconds of data!\n",  (double)(time_1 - time_0) /CLOCKS_PER_SEC, tick/1000.0);
+
+	return;
+}
+
+/*-----------------------------------------------------------------------------------
+ *
+ * ---------------------------------------------------------------------------------*/
+// Unpack GRS data
+void Open_Loop::bit_unpack(DATA_CPX *unpacked, uint32 *packed, int32 cnt)
+{
+
+	int32 lcv, k;
+	uint32 *pB= (uint32*)packed;
+	uint32 val;
+	DATA_CPX lookup[4];
+	k = 0;
+
+
+	// Assumes packed such that bit 0 holds Q0, bit 1 holds I0, bit 2 holds Q1, ... bit 30 holds Q15, bit 31 holds I15.
+	lookup[0].r = 1;
+	lookup[0].i = 1;
+
+	lookup[1].r = 1;
+	lookup[1].i = -1;
+
+	lookup[2].r = -1;
+	lookup[2].i = 1;
+
+	lookup[3].r = -1;
+	lookup[3].i = -1;
+
+	val = *pB;
+	for(lcv = 0; lcv < cnt; lcv++) {
+		unpacked[lcv] = lookup[(val & 0x00000003)];
+		val >>= 2;
+
+		if(k++ >= 15) {
+			pB++;
+			val = *pB;
+			k = 0;
+		}
+	}
+}
+

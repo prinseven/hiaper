@@ -1,0 +1,40 @@
+
+---------Preprocessing-----------
+Enter file name:  
+Example = /media/Files/grs-data/2008.053_RF05_F01_A0_L1  
+
+Enter file length in milliseconds:  
+Enter first file number:  
+Enter last file number:  
+File 18: /project/enezeg/b/data/hiaper_grs/2008.025_heft08/2008.046_RF03/2008.046_RF03_F01_A0_L1_10773036_598502.grs
+Acquiring Satellites...
+Direct acquisition of GRS18 took 57.97 seconds!
+
+File 19: /project/enezeg/b/data/hiaper_grs/2008.025_heft08/2008.046_RF03/2008.046_RF03_F01_A0_L1_11371538_598502.grs
+Acquiring Satellites...
+Direct acquisition of GRS19 took 58.00 seconds!
+
+File 20: /project/enezeg/b/data/hiaper_grs/2008.025_heft08/2008.046_RF03/2008.046_RF03_F01_A0_L1_11970040_598502.grs
+Acquiring Satellites...
+Direct acquisition of GRS20 took 58.09 seconds!
+
+File 21: /project/enezeg/b/data/hiaper_grs/2008.025_heft08/2008.046_RF03/2008.046_RF03_F01_A0_L1_12568542_598502.grs
+Acquiring Satellites...
+Direct acquisition of GRS21 took 58.00 seconds!
+
+File 22: /project/enezeg/b/data/hiaper_grs/2008.025_heft08/2008.046_RF03/2008.046_RF03_F01_A0_L1_13167044_598502.grs
+Acquiring Satellites...
+Direct acquisition of GRS22 took 58.11 seconds!
+
+File 23: /project/enezeg/b/data/hiaper_grs/2008.025_heft08/2008.046_RF03/2008.046_RF03_F01_A0_L1_13765546_598502.grs
+Acquiring Satellites...
+Direct acquisition of GRS23 took 58.06 seconds!
+
+PRN    2  4  5  6 10 12 15 18 21 24 26 29 30
+18     *  *  *     *  *  *  *     *  *  *  *
+19     *  *  *  *  *  *  *  *     *  *  *  *
+20     *  *  *  *  *  *  *  *     *  *  *  *
+21     *     *  *  *  *  *  *     *  *  *  *
+22     *     *  *  *  *  *  *  *  *  *  *  *
+23     *     *  *  *  *  *  *  *  *  *  *  *
+

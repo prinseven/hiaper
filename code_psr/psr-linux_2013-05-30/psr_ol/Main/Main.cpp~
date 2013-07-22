@@ -1,0 +1,20 @@
+/*
+ * Main.cpp
+ *
+ *  Created on: Sep 30, 2010
+ *      Author: ulvi
+ **********************************************************************/
+#define GLOBALS_HERE
+#include "Includes.h"
+
+int main(int argc, char *argv[])
+{
+
+	//make sure the output directory exists
+	mkdir("Output",NULL);
+
+	Object_Init();
+
+	return(0);
+}
+
