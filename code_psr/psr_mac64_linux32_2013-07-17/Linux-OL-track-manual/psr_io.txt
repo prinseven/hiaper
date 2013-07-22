@@ -1,0 +1,48 @@
+
+prep.csh < prep.inp
+
+prep.inp:
+---------------
+DATADIR =	 '/project/enezeg/b/data/hiaper_grs/2008.025_heft08/2008.046_RF03'
+FILEROOT 	= '2008.046_RF03_F01'
+CHANNEL{1,2,3} 	= 1,2
+???		= 1
+STARTFILE(num) 	= 18
+ENDFILE(num)	= 23
+EXPNAME		= 'heft08'
+GRSLENGTH(bytes) = 598502
+
+
+prep.csh output:
+================
+prep.out:
+--------------- file format:
+PRN          prnX prnX prnX ...
+grsfilenum    *    *    *   ...
+
+preptime.out:
+--------------- file format:
+prn startime(sow) endtime(sow) starttime(dec_hr) starttime(hhmm) startfile(num) endfile(num) lat(deg) set/rise(-1,1) channel(1,2,3) startelevation(deg) endelevation(deg)
+02  486893.590 503651.646 15.24 1514 00 28 -999 -1 01  10.0  -5.4
+16  504848.650 506644.156 20.24 2044 30 33 -999  1 01  -4.1  11.4
+16  507841.160 509038.164 21.07 2104 35 37 -999  1 01  10.0  -3.6
+...
+
+skyplot.jpg:
+---------------
+
+elevation.jpg:
+---------------
+
+---------------
+psr_cl/CH1
+   DatabitsSVXX.out
+   chanxx.dat
+   svchan.dat
+
+
+
+intermediate files:
+   DatabitsSVXX.in
+   OLPredictSVXX.in
+   OLPredictSVXX.out
